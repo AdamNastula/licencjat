@@ -390,62 +390,144 @@ public class ChessBoard
          UInt64 currentPosition = knightPosition & (knightColor == PieceColor.White ? _piecesBitboards[WhiteKnights] : _piecesBitboards[BlackKnights]);
          UInt64 enemyKing = knightColor == PieceColor.White ? _piecesBitboards[BlackKing] : _piecesBitboards[WhiteKing];
          UInt64 freeSquares = ~ownOccupiedSquares;
+         bool kingChecked = knightColor == PieceColor.White ? _whiteKingChecked : _blackKingChecked;
+         UInt64 enemyAttackedSquares = knightColor == PieceColor.White ? _blackAttackedSquares : _whiteAttackedSquares;
          if (currentPosition == 0)
          {
              return moves;
          }
 
          UInt64 pos = (((currentPosition & _notAbFile) >> 6) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
 
          pos = (((currentPosition & _notGhFile) << 6) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
 
          pos = (((currentPosition & _notGhFile) >> 10) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
          
          pos = (((currentPosition & _notAbFile) << 10) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
          
          pos = (((currentPosition & (~_columns[7])) << 15) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
          
          pos = (((currentPosition & (~_columns[0])) >> 15) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
 
          pos = (((currentPosition & (~_columns[0])) << 17) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
          }
          
          pos = (((currentPosition & (~_columns[7])) >> 17) & freeSquares);
-         moves |= pos;
+         if (kingChecked)
+         {
+             if ((currentPosition & enemyAttackedSquares) != 0)
+             {
+                 moves |= pos;
+             }
+         }
+         else
+         {
+             moves |= pos;   
+         }
          if ((pos & enemyKing) != 0)
          {
              _attackingLine = pos;
@@ -631,6 +713,8 @@ public class ChessBoard
          UInt64 currentPosition = piecePosition;
          UInt64 currentLine = 0UL;
          UInt64 enemyKing = pieceColor == PieceColor.White ? _piecesBitboards[BlackKing] : _piecesBitboards[WhiteKing];
+         bool kingChecked = pieceColor == PieceColor.White ? _whiteKingChecked : _blackKingChecked;
+         UInt64 enemyAttackedSquares = pieceColor == PieceColor.White ? _blackAttackedSquares : _whiteAttackedSquares;
          
          // lewy dolny rog
          for (int i = 1; i <= 7; i++)
@@ -644,6 +728,14 @@ public class ChessBoard
              if ((currentPosition & ownOccupiedSquares) != 0 || currentPosition == 0)
              {
                  break;
+             }
+
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
              }
  
              if ((currentPosition & enemyOccupiedSquares) != 0)
@@ -676,6 +768,14 @@ public class ChessBoard
              {
                  break;
              }
+             
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
  
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
@@ -706,6 +806,14 @@ public class ChessBoard
              if ((currentPosition & ownOccupiedSquares) != 0 || currentPosition == 0)
              {
                  break;
+             }
+             
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
              }
  
              if ((currentPosition & enemyOccupiedSquares) != 0)
@@ -739,6 +847,14 @@ public class ChessBoard
                  break;
              }
  
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
+             
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
                  currentLine |= currentPosition;
@@ -765,7 +881,8 @@ public class ChessBoard
          UInt64 currentPosition = piecePosition;
          UInt64 currentLine = 0UL;
          UInt64 enemyKing = pieceColor == PieceColor.White ? _piecesBitboards[BlackKing] : _piecesBitboards[WhiteKing];
-
+         bool kingChecked = pieceColor == PieceColor.White ? _whiteKingChecked : _blackKingChecked;
+         UInt64 enemyAttackedSquares = pieceColor == PieceColor.White ? _blackAttackedSquares : _whiteAttackedSquares;
          
          // w dol
          for (int i = 1; i <= 7; i++)
@@ -781,9 +898,17 @@ public class ChessBoard
                  break;
              }
  
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
+             
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
-                 moves |= currentPosition;
+                 currentLine |= currentPosition;
                  break;
              }
              
@@ -811,10 +936,18 @@ public class ChessBoard
              {
                  break;
              }
+             
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
  
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
-                 moves |= currentPosition;
+                 currentLine |= currentPosition;
                  break;
              }
              
@@ -843,9 +976,17 @@ public class ChessBoard
                  break;
              }
  
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
+             
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
-                 moves |= currentPosition;
+                 currentLine |= currentPosition;
                  break;
              }
              
@@ -873,10 +1014,18 @@ public class ChessBoard
              {
                  break;
              }
+             
+             if (kingChecked)
+             {
+                 if ((currentPosition & enemyAttackedSquares) == 0)
+                 {
+                     continue;
+                 }
+             }
  
              if ((currentPosition & enemyOccupiedSquares) != 0)
              {
-                 moves |= currentPosition;
+                 currentLine |= currentPosition;
                  break;
              }
              
@@ -1069,7 +1218,6 @@ public class ChessBoard
              GenerateQueenMoves(i, PieceColor.Black);
              if (_attackingLine != 0)
              {
-                 Utils.PrintBitboard(_attackingLine | i);
                  _blackAttackedSquares |= (_attackingLine | i);
                  _attackingLine = 0UL;
              }
