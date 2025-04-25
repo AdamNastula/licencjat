@@ -253,7 +253,7 @@ public class GameBoard : VerticalStackLayout
         }
         else
         {
-            Piece? rook = (Piece?)_board[7].Content;
+            Piece? rook = (Piece?)_board[0].Content;
             if (rook is null)
             {
                 return;
