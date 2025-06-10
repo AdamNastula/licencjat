@@ -2,18 +2,24 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChessApp.MainPage">
-
     <ScrollView>
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25"
         >
-            
             <Button
                 x:Name="SingleplayerButton"
+                Text="Graj na jedej szachownicy" 
+                SemanticProperties.Hint="Rozpocznij gre 1v1."
+                Clicked="SingleplayerButtonClicked"
+                HorizontalOptions="Fill"
+            />
+            
+            <Button
+                x:Name="BotButton"
                 Text="Graj na bota" 
                 SemanticProperties.Hint="Rozpocznij gre na bota."
-                Clicked="SingleplayerButtonClicked"
+                Clicked="BotButtonClicked"
                 HorizontalOptions="Fill"
             />
             
@@ -24,8 +30,6 @@
                 Clicked="MultiplayerButtonClicked"
                 HorizontalOptions="Fill"
             />
-            
         </VerticalStackLayout>
     </ScrollView>
-
 </ContentPage>

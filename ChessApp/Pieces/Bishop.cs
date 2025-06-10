@@ -7,6 +7,8 @@ public class Bishop : Piece
     public Bishop(int position, ChessBoard.PieceColor color, EventHandler onClick) : base(position, color, onClick)
     {
         Source = color == ChessBoard.PieceColor.White ? "wbishop.png" : "bbishop.png";
+        PieceType = 3;
+        PieceTypeBoard = ChessBoard.PieceType.Bishop;
     }
 
     public override ulong GetLegalMoves(ref ChessBoard board)

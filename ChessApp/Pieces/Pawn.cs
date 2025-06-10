@@ -7,6 +7,8 @@ public class Pawn : Piece
     public Pawn(int position, ChessBoard.PieceColor color, EventHandler onClick) : base(position, color, onClick)
     {
         Source = color == ChessBoard.PieceColor.White ? "wpawn.png" : "bpawn.png";
+        PieceType = 6;
+        PieceTypeBoard = ChessBoard.PieceType.Pawn;
     }
 
     public override ulong GetLegalMoves(ref ChessBoard board)

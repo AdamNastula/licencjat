@@ -7,6 +7,8 @@ public class Knight : Piece
     public Knight(int position, ChessBoard.PieceColor color,  EventHandler onClick) : base(position, color, onClick)
     {
         Source = color == ChessBoard.PieceColor.White ? "wknight.png" : "bknight.png";
+        PieceType = 2;
+        PieceTypeBoard = ChessBoard.PieceType.Knight;
     }
 
     public override ulong GetLegalMoves(ref ChessBoard board)

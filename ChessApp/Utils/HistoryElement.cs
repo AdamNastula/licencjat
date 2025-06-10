@@ -1,3 +1,4 @@
+using System;
 using ChessEngine;
 
 namespace ChessApp.Utils;
@@ -14,9 +15,7 @@ public class HistoryElement : ScrollView
         MaximumHeightRequest = 250;
         MinimumHeightRequest = 250;
         var content = new HorizontalStackLayout();
-        
         Content = content;
-        
         _whitePlayerHistory = new Label
         {
             FontSize = 20,
@@ -35,10 +34,20 @@ public class HistoryElement : ScrollView
         content.Add(_blackPlayerHistory);
     }
 
-    public void AddMove(ChessBoard.PieceColor side)
+    public void AddMove(UInt64 from, UInt64 to, ChessBoard.PieceType piece, ChessBoard.PieceColor color)
     {
-        var sideToAdd = side == ChessBoard.PieceColor.White ? _whitePlayerHistory : _blackPlayerHistory;
-        sideToAdd.Text += "move";
+        var sideToAdd = color == ChessBoard.PieceColor.White ? _whitePlayerHistory : _blackPlayerHistory;
+        sideToAdd.Text += DecodeMove(from);
+        sideToAdd.Text += " ";
+        sideToAdd.Text += DecodeMove(to);
         sideToAdd.Text += '\n';
+    }
+
+    private string DecodeMove(UInt64 square)
+    {
+        UInt64 squareIndex = UInt64.Log2(square);
+        char col = (char)('H' - squareIndex % 8);
+        char row = (char)('1' + squareIndex / 8);
+        return col.ToString() + row.ToString();
     }
 }

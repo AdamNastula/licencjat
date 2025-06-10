@@ -6,7 +6,9 @@ public abstract class Piece : ImageButton
 {
     public UInt64 Position;
     public int BoardPosition;
-    protected ChessBoard.PieceColor Color;
+    public byte PieceType { get; init; }
+    public ChessBoard.PieceType PieceTypeBoard { get; init; }
+    public ChessBoard.PieceColor Color { get; init; }
     
     public Piece(int position, ChessBoard.PieceColor color, EventHandler onClick)
     {

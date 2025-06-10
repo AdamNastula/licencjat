@@ -1,5 +1,6 @@
 using ChessApp.Pieces;
 using ChessEngine;
+using CommunityToolkit.Maui.Views;
 
 namespace ChessApp.Utils;
 
@@ -9,10 +10,12 @@ public class GameBoard : VerticalStackLayout
     private readonly List<BoardSquare> _board;
     private ChessBoard _logicalBoard;
     private Piece? _selectedPiece = null;
-    public GameBoard(ChessBoard.PieceColor color)
+    private Menu _mainMenu;
+    public GameBoard(ChessBoard.PieceColor color, Menu menu)
     {
         _board = new List<BoardSquare>(64);
         _logicalBoard = new ChessBoard();
+        _mainMenu = menu;
         HorizontalStackLayout currentRow = new HorizontalStackLayout();
         char currentLetter = color == ChessBoard.PieceColor.White ? '8' : '1';
         currentRow.Add(new Label(){Text = currentLetter.ToString(), FontSize = 40, WidthRequest = SquareSize, HeightRequest = SquareSize, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center});
@@ -116,7 +119,7 @@ public class GameBoard : VerticalStackLayout
         }
     }
 
-    private void SquareTapped(object? sender, TappedEventArgs tappedEventArgs)
+    private async void SquareTapped(object? sender, TappedEventArgs tappedEventArgs)
     {
         BoardSquare? tappedSquare = (BoardSquare?)sender;
         if (tappedSquare is null || _selectedPiece is null)
@@ -124,23 +127,23 @@ public class GameBoard : VerticalStackLayout
             return;
         }
 
+        UInt64 from = _selectedPiece.Position;
+        UInt64 to = tappedSquare.Index;
         bool shortCastling = false;
         bool longCastling = false;
-        
+        bool enPassant = false;
+        bool promotion = false;
         if (_selectedPiece is King)
         {
             int castlingRights = _logicalBoard.GetCastlingRights();
-
             if (_selectedPiece.GetPieceColor() == ChessBoard.PieceColor.White)
             {
                 if ((tappedSquare.GridIndex == 62) && ((castlingRights & _logicalBoard.WhiteShortCastle) == _logicalBoard.WhiteShortCastle))
                 {
-                    Console.WriteLine("BIala krotka roszada");
                     shortCastling = true;
                 }
                 else if ((tappedSquare.GridIndex == 58) && ((castlingRights & _logicalBoard.WhiteLongCastle) == _logicalBoard.WhiteLongCastle))
                 {
-                    Console.WriteLine("BIala dluga roszada");
                     longCastling = true;
                 }
             }
@@ -148,19 +151,44 @@ public class GameBoard : VerticalStackLayout
             {
                 if (tappedSquare.GridIndex == 6 && (castlingRights & _logicalBoard.BlackShortCastle) == _logicalBoard.BlackShortCastle)
                 {
-                    Console.WriteLine("Czarna krotka roszada");
                     shortCastling = true;
                 }
                 else if ((tappedSquare.GridIndex == 2) && ((castlingRights & _logicalBoard.BlackLongCastle) == _logicalBoard.BlackLongCastle))
                 {
-                    Console.WriteLine("Czarna dluga roszada");
                     longCastling = true;
                 }
+            }
+        }
+        else if (_selectedPiece is Pawn)
+        {
+            if (_selectedPiece.GetPieceColor() == ChessBoard.PieceColor.White)
+            {
+                if (tappedSquare.GridIndex / 8 == 0)
+                {
+                    promotion = true;
+                }
+            }
+            else
+            {
+                if (tappedSquare.GridIndex / 8 == 7)
+                {
+                    promotion = true;
+                }
+            }
+        }
+        
+        UInt64 enPassantSquare = _logicalBoard.GetEnPassantSquare();
+        if (_selectedPiece is Pawn)
+        {
+            if (tappedSquare.Index == enPassantSquare)
+            {
+                enPassant = true;
             }
         }
         
         if (tappedSquare.BackgroundColor.Equals(Colors.Bisque) && _selectedPiece.Move(tappedSquare.Index, ref _logicalBoard))
         {
+            _mainMenu.UpdateStatus(_logicalBoard.EvaluatePosition(), from, to, _selectedPiece.PieceTypeBoard, _selectedPiece.Color);
             if (shortCastling)
             {
                 ShortCastle(_selectedPiece.GetPieceColor());
@@ -171,17 +199,81 @@ public class GameBoard : VerticalStackLayout
                 LongCastle(_selectedPiece.GetPieceColor());
                 _logicalBoard.LongCastle(_selectedPiece.GetPieceColor());
             }
+
+            if (enPassant)
+            {
+                EnPassant(enPassantSquare, _selectedPiece.GetPieceColor());
+                _logicalBoard.EnPassant(enPassantSquare, _selectedPiece.GetPieceColor());
+            }
             
             _board[_selectedPiece.BoardPosition].Content = null;
             tappedSquare.SetContent(_selectedPiece);
+            _selectedPiece.BoardPosition = tappedSquare.GridIndex;
+            if (promotion)
+            {
+                var piece = await Promote(tappedSquare.GridIndex, _selectedPiece.GetPieceColor());
+                _logicalBoard.Promote(piece);
+            }
+            
+            if (_logicalBoard.GameEnded())
+            {
+                var popup = new EndGamePopup((ChessBoard.PieceColor)_logicalBoard.GetWinner()!);
+                ((ContentPage)(Parent.Parent)).ShowPopup(popup);
+            }
+            
             ChangeSides();
         }
         
         ClearBoard();
-        _selectedPiece.BoardPosition = tappedSquare.GridIndex;
         _selectedPiece = null;
     }
 
+    private void EnPassant(UInt64 targetSquare, ChessBoard.PieceColor pawnColor)
+    {
+        if (pawnColor == ChessBoard.PieceColor.White)
+        {
+            targetSquare >>= 8;
+        }
+        else
+        {
+            targetSquare <<= 8;
+        }
+        
+        for (int i = 0; i < 64; i++)
+        {
+            if (_board[i].Index == targetSquare)
+            {
+                _board[i].Content = null;
+            }
+        }
+    }
+
+    private async Task<ChessBoard.PieceType> Promote(int promotionTargetSquare, ChessBoard.PieceColor color)
+    {
+        ChoosePiecePopup popup = new ChoosePiecePopup();
+        var chosenPiece = (ChessBoard.PieceType)(await ((ContentPage)(Parent.Parent)).ShowPopupAsync(popup));
+        _board[promotionTargetSquare].Content = null;
+
+        if (chosenPiece is ChessBoard.PieceType.Queen)
+        {
+            _board[promotionTargetSquare].Content = new Queen(promotionTargetSquare, color, DrawMovableSquares);
+        }
+        else if (chosenPiece is ChessBoard.PieceType.Rook)
+        {
+            _board[promotionTargetSquare].Content = new Rook(promotionTargetSquare, color, DrawMovableSquares);
+        }
+        else if (chosenPiece is ChessBoard.PieceType.Knight)
+        {
+            _board[promotionTargetSquare].Content = new Knight(promotionTargetSquare, color, DrawMovableSquares);
+        }
+        else
+        {
+            _board[promotionTargetSquare].Content = new Bishop(promotionTargetSquare, color, DrawMovableSquares);
+        }
+        
+        return chosenPiece;
+    }
+    
     private void ClearBoard()
     {
         foreach (var square in _board)

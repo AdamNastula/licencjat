@@ -1,13 +1,16 @@
+using System.Globalization;
+using ChessEngine;
+
 namespace ChessApp.Utils;
 
 public class Menu : VerticalStackLayout
 {
     private HistoryElement _movesHistory;
+    private Label _evaluationLabel;
     public Menu()
     {
         WidthRequest = 8 * GameBoard.SquareSize;
         HorizontalOptions = this.HorizontalOptions with { Alignment = LayoutAlignment.End };
-        
         Add(new Label()
         {
             Text = "Historia ruchów",
@@ -20,27 +23,29 @@ public class Menu : VerticalStackLayout
         _movesHistory = new HistoryElement();
         _movesHistory.HorizontalOptions = _movesHistory.HorizontalOptions with { Alignment = LayoutAlignment.Center};
         Add(_movesHistory);
-        
-        Label timeLabel = new Label
+        _evaluationLabel = new Label
         {
             FontSize = 30,
-            Text = "0:00"
+            Text = "0"
         };
-        timeLabel.HorizontalOptions = timeLabel.HorizontalOptions with { Alignment = LayoutAlignment.Center };
-        Add(timeLabel);
         
-        Add(new Button()
-        {
-            Text = "Zaproponuj remis",
-            WidthRequest = 200,
-            Margin = new Thickness(0, 10)
-        });
-        
-        Add(new Button
-        {
-            Text = "Poddaj się",
-            WidthRequest = 200,
-            Margin = new Thickness(0, 10)
-        });
+        _evaluationLabel.HorizontalOptions = _evaluationLabel.HorizontalOptions with { Alignment = LayoutAlignment.Center };
+        Add(_evaluationLabel);
+        Button backToMenuButton = new Button();
+        backToMenuButton.Text = "Wyjdz z gry";
+        backToMenuButton.Clicked += BackToMenuButtonClicked;
+        backToMenuButton.WidthRequest = 200;
+        Add(backToMenuButton);
+    }
+
+    public void UpdateStatus(double evaluation, UInt64 from, UInt64 to, ChessBoard.PieceType piece, ChessBoard.PieceColor color)
+    {
+        _movesHistory.AddMove(from, to, piece, color);
+        _evaluationLabel.Text = evaluation.ToString();
+    }
+    
+    private void BackToMenuButtonClicked(object sender, EventArgs e)
+    {
+        Application.Current!.MainPage = new MainPage();
     }
 }
