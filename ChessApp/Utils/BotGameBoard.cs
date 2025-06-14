@@ -251,11 +251,13 @@ public class BotGameBoard : VerticalStackLayout
     {
         try
         {
-            Console.WriteLine("Rozpoczynam przeszukiwanie pozycji.");
             ChessBot.ChessBot.Move botMove = _bot.Play(ref _logicalBoard);
             MainThread.BeginInvokeOnMainThread(() => _mainMenu.UpdateStatus(_logicalBoard.EvaluatePosition(), botMove.From, botMove.To, botMove.Piece, _color == ChessBoard.PieceColor.White ? ChessBoard.PieceColor.Black : ChessBoard.PieceColor.White));
-            Console.WriteLine("Zakonczylem przeszukiwanie pozycji.");
             Image botPiece = null!;
+            UInt64 blackLongCastleSquare = 32UL << 56;
+            UInt64 blackShortCastleSquare = 2UL << 56;
+            UInt64 blackKingBeginingSquare = 8UL << 56;
+            UInt64 blackPromotionRow = 255UL;
             for (int i = 0; i < 64; i++)
             {
                 if ((1UL << (63 - i)) == botMove.From)
@@ -273,6 +275,47 @@ public class BotGameBoard : VerticalStackLayout
                 if ((1UL << (63 - i)) == botMove.To)
                 {
                     await MainThread.InvokeOnMainThreadAsync(() => _board[i].Content = botPiece);
+                }
+            }
+            
+            if (botMove.Piece is ChessBoard.PieceType.King)
+            {
+                int castlingRights = _logicalBoard.GetCastlingRights();
+                
+                if (botMove.From == blackKingBeginingSquare && botMove.To == blackShortCastleSquare)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() => ShortCastle(ChessBoard.PieceColor.Black));
+                }
+                else if (botMove.From == blackKingBeginingSquare && botMove.To == blackLongCastleSquare) 
+                { 
+                    await MainThread.InvokeOnMainThreadAsync(() => LongCastle(ChessBoard.PieceColor.Black));
+                }
+            }
+            else if (_selectedPiece is Pawn)
+            {
+                if ((botMove.To & blackPromotionRow) != 0)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        UInt64 promotionSquare = 9223372036854775808UL;
+                        for (int i = 0; i < 8; i++)
+                        {
+                            if ((promotionSquare & botMove.To) != 0)
+                            {
+                                _board[i].Content = new Image(){Source = "bqueen.png"};
+                                break;
+                            }
+                        }
+                    });
+                }
+            }
+
+            UInt64 enPassantSquare = _logicalBoard.GetEnPassantSquare();
+            if (_selectedPiece is Pawn)
+            {
+                if (botMove.To == enPassantSquare)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() => EnPassant(enPassantSquare, ChessBoard.PieceColor.Black));
                 }
             }
         }
@@ -356,16 +399,9 @@ public class BotGameBoard : VerticalStackLayout
         }
         else
         {
-            Piece? rook = (Piece?)_board[7].Content;
-            if (rook is null)
-            {
-                return;
-            }
-            
+            Image rook = new Image(){Source = "brook.png"};
             _board[7].Content = null;
             _board[5].Content = rook;
-            rook.BoardPosition = 5;
-            rook.Position = (4Ul << 56);
         }
     }
 
@@ -386,16 +422,9 @@ public class BotGameBoard : VerticalStackLayout
         }
         else
         {
-            Piece? rook = (Piece?)_board[0].Content;
-            if (rook is null)
-            {
-                return;
-            }
-            
+            Image rook = new Image(){Source = "brook.png"};
             _board[0].Content = null;
             _board[3].Content = rook;
-            rook.BoardPosition = 3;
-            rook.Position = (16Ul << 56);
         }
     }
 }

@@ -33,7 +33,7 @@ public class GameBoard : VerticalStackLayout
             if (i % 8 != 7) continue;
             Add(currentRow);
             currentRow = new HorizontalStackLayout();
-            currentRow.Add(new Label(){Text = currentLetter.ToString(), FontSize = 40, WidthRequest = SquareSize, HeightRequest = SquareSize, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center});
+            currentRow.Add(new Label(){Text = currentLetter.ToString(), FontSize = 40, WidthRequest = SquareSize, HeightRequest = SquareSize, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.Transparent});
             if (color == ChessBoard.PieceColor.White)
                 currentLetter--;
             else

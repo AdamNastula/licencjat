@@ -89,8 +89,6 @@ public class ChessBoard
      private PieceColor? _winner = null;
      private readonly List<PieceMoves> _blackMoves = new List<PieceMoves>(40);
      private readonly List<PieceMoves> _whiteMoves = new List<PieceMoves>(40);
-     // premia za kazde widoczne pole dla gonca i wiezy
-     // skoczek premia
      
      public ChessBoard()
      {
@@ -198,6 +196,69 @@ public class ChessBoard
         _blackPromotion = engine._blackPromotion;
         _blackMoves = engine._blackMoves;
         _whiteMoves = engine._whiteMoves;
+        UInt64 currentColumn = 9259542123273814144UL;
+        for (int i = 0; i < 8; i++)
+        {
+            _columns[i] = currentColumn;
+            currentColumn >>= 1;
+        }
+        
+        UInt64 currentRow = 255;
+        for (int i = 0; i < 8; i++)
+        {
+            _rows[i] = currentRow;
+            currentRow <<= 8;
+        }
+     }
+
+     public void Copy(ChessBoard engine)
+     {
+         for (int i = 0; i < 12; i++)
+         {
+             _piecesBitboards[i] = engine._piecesBitboards[i];
+         }
+         
+         _sideToMove = engine._sideToMove;
+         _freeSquares = engine._freeSquares;
+         _occupiedSquares = engine._occupiedSquares;
+         _blackOccupiedSquares = engine._blackOccupiedSquares;
+         _whiteOccupiedSquares = engine._whiteOccupiedSquares;
+         _whiteAttackedSquares = engine._whiteAttackedSquares;
+         _blackAttackedSquares = engine._blackAttackedSquares;
+         _whiteCheckingLine = engine._whiteCheckingLine;
+         _blackCheckingLine = engine._blackCheckingLine;
+         _whiteKingChecked = engine._whiteKingChecked;
+         _blackKingChecked = engine._blackKingChecked;
+         _whiteKingMoved = engine._whiteKingMoved;
+         _blackKingMoved = engine._blackKingMoved; 
+         _whiteHRookMoved = engine._whiteHRookMoved;
+         _whiteARookMoved = engine._whiteARookMoved;
+         _blackHRookMoved = engine._blackHRookMoved;
+         _blackARookMoved = engine._blackARookMoved;
+         _whitePromotion = engine._whitePromotion;
+         _blackPromotion = engine._blackPromotion;
+         _whiteDoubleCheck = engine._whiteDoubleCheck;
+         _blackDoubleCheck = engine._blackDoubleCheck;
+         _gameEnded = engine._gameEnded;
+         _timeSinceEnPassant = engine._timeSinceEnPassant;
+         _promotionTargetSquare = engine._promotionTargetSquare;
+         _attackingLine = engine._attackingLine; 
+         _blackEnPassantSquare = engine._blackEnPassantSquare;
+         _whiteEnPassantSquare = engine._whiteEnPassantSquare;
+         _whitePinningSquares = engine._whitePinningSquares;
+         _blackPinningSquares = engine._blackPinningSquares;
+         _whiteVisibleSquares = engine._whiteVisibleSquares;
+         _blackVisibleSquares = engine._blackVisibleSquares;
+         _winner = null;
+         _blackMoves.Clear();
+         _blackMoves.AddRange(engine._blackMoves);
+         _whiteMoves.Clear();
+         _whiteMoves.AddRange(engine._whiteMoves);
+     }
+
+     public UInt64 GetOccupiedSquares()
+     {
+         return _occupiedSquares;
      }
 
      public List<PieceMoves> GetMoves(PieceColor color)
@@ -297,11 +358,6 @@ public class ChessBoard
      public bool IsBlackKingChecked()
      {
          return _blackKingChecked;
-     }
-
-     public void PrintBoard()
-     {
-         Utils.PrintBitboard(_occupiedSquares);
      }
      
      public bool MakeMove(UInt64 from, UInt64 to, PieceType piece, PieceColor color)
@@ -741,8 +797,8 @@ public class ChessBoard
          UInt64 freeSquares = ~ownOccupiedSquares;
          UInt64 enemyCheckingLine = knightColor == PieceColor.White ? _blackCheckingLine : _whiteCheckingLine;
          UInt64 enemyPinningSquares = knightColor == PieceColor.White ? _blackPinningSquares : _whitePinningSquares;
-         bool kingChecked = knightColor == PieceColor.White ? _whiteKingChecked : _blackKingChecked;
          UInt64 ownVisibleSquares = 0Ul;
+         bool kingChecked = knightColor == PieceColor.White ? _whiteKingChecked : _blackKingChecked;
          bool doubleCheck = knightColor == PieceColor.White ? _whiteDoubleCheck : _blackDoubleCheck;
          if (currentPosition == 0 || doubleCheck)
          {
@@ -754,8 +810,9 @@ public class ChessBoard
              return moves;
          }
 
-         UInt64 currentMove = (((currentPosition & _notAbFile) >> 6) & freeSquares);
+         UInt64 currentMove = (currentPosition & _notAbFile) >> 6;
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -772,8 +829,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
 
-         currentMove = (((currentPosition & _notGhFile) << 6) & freeSquares);
+         currentMove = ((currentPosition & _notGhFile) << 6);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -790,8 +848,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
 
-         currentMove = (((currentPosition & _notGhFile) >> 10) & freeSquares);
+         currentMove = ((currentPosition & _notGhFile) >> 10);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -808,8 +867,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
          
-         currentMove = (((currentPosition & _notAbFile) << 10) & freeSquares);
+         currentMove = ((currentPosition & _notAbFile) << 10);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -826,8 +886,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
          
-         currentMove = (((currentPosition & (~_columns[7])) << 15) & freeSquares);
+         currentMove = ((currentPosition & (~_columns[7])) << 15);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -844,8 +905,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
          
-         currentMove = (((currentPosition & (~_columns[0])) >> 15) & freeSquares);
+         currentMove = ((currentPosition & (~_columns[0])) >> 15);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -862,8 +924,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
 
-         currentMove = (((currentPosition & (~_columns[0])) << 17) & freeSquares);
+         currentMove = ((currentPosition & (~_columns[0])) << 17);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -880,8 +943,9 @@ public class ChessBoard
              _attackingLine = currentPosition;
          }
          
-         currentMove = (((currentPosition & (~_columns[7])) >> 17) & freeSquares);
+         currentMove = ((currentPosition & (~_columns[7])) >> 17);
          ownVisibleSquares |= currentMove;
+         currentMove &= freeSquares;
          if (kingChecked)
          {
              if ((currentMove & enemyCheckingLine) != 0)
@@ -1715,7 +1779,7 @@ public class ChessBoard
                      _attackingLine |= piecePosition;
                      while ((currentPosition & _columns[7]) == 0)
                      {
-                         currentPosition <<= 1;
+                         currentPosition >>= 1;
                          ownVisibleSquares |= currentPosition;
                      }
                      
@@ -2127,12 +2191,7 @@ public class ChessBoard
      private void GenerateAttackedAndVisibleSquares()
      {
          _whiteVisibleSquares = 0UL;
-         _blackVisibleSquares = 0UL;
          _whiteAttackedSquares = 0Ul;
-         _blackAttackedSquares = 0UL;
-         _whiteCheckingLine = 0UL;
-         _blackCheckingLine = 0UL;
-         _blackCheckingLine = 0UL;
          _whiteCheckingLine = 0UL;
          _attackingLine = 0UL;
          _whiteDoubleCheck = false;
@@ -2284,6 +2343,9 @@ public class ChessBoard
              _attackingLine = 0UL;
          }
          
+         _blackCheckingLine = 0UL;
+         _blackAttackedSquares = 0UL;
+         _blackVisibleSquares = 0UL;
          pieces = _piecesBitboards[blackPawns];
          _attackingLine = 0UL;
          for (UInt64 i = (128UL << 48); i <= pieces; i >>= 1)
